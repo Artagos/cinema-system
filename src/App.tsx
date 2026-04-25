@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ClerkProvider } from '@clerk/clerk-react';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PageLoader } from './components/PageLoader';
 import './App.css';
@@ -12,6 +12,21 @@ const Register = lazy(() => import('./views/Register'));
 const Dashboard = lazy(() => import('./views/Dashboard'));
 const Movies = lazy(() => import('./views/Movies'));
 const PublicMovies = lazy(() => import('./views/PublicMovies'));
+
+// Public route wrapper - redirects authenticated users to dashboard
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
@@ -44,7 +59,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/public-movies" element={<PublicMovies />} />
+              <Route
+                path="/public-movies"
+                element={
+                  <PublicRoute>
+                    <PublicMovies />
+                  </PublicRoute>
+                }
+              />
               <Route path="/" element={<Navigate to="/public-movies" replace />} />
             </Routes>
           </Suspense>

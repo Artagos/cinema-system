@@ -473,6 +473,30 @@
       color: rgba(255, 255, 255, 0.5);
     }
   }
+
+  .login-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 12px 24px;
+    background: #e50914;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s, transform 0.1s;
+    z-index: 1000;
+
+    &:hover {
+      background: #b20710;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }
 
 /* ===== Movies View Styles ===== */
