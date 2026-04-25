@@ -2,9 +2,9 @@ import { NavLink } from 'react-router-dom';
 import {
   Film,
   LayoutDashboard,
-  Calendar,
-  Users,
-  Settings,
+  // Calendar,
+  // Users,
+  // Settings,
   LogOut
 } from 'lucide-react';
 
@@ -29,18 +29,18 @@ export function Sidebar({ onLogout }: SidebarProps) {
           <Film size={20} />
           <span>Movies</span>
         </NavLink>
-        <NavLink to="/showtimes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Calendar size={20} />
-          <span>Showtimes</span>
-        </NavLink>
-        <NavLink to="/staff" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Users size={20} />
-          <span>Staff</span>
-        </NavLink>
-        <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Settings size={20} />
-          <span>Settings</span>
-        </NavLink>
+        {/*<NavLink to="/showtimes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>*/}
+        {/*  <Calendar size={20} />*/}
+        {/*  <span>Showtimes</span>*/}
+        {/*</NavLink>*/}
+        {/*<NavLink to="/staff" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>*/}
+        {/*  <Users size={20} />*/}
+        {/*  <span>Staff</span>*/}
+        {/*</NavLink>*/}
+        {/*<NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>*/}
+        {/*  <Settings size={20} />*/}
+        {/*  <span>Settings</span>*/}
+        {/*</NavLink>*/}
       </nav>
 
       <div className="sidebar-footer">

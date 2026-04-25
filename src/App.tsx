@@ -1,9 +1,12 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ChatProvider } from './contexts/ChatContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PageLoader } from './components/PageLoader';
+import { FloatingChatButton } from './components/FloatingChatButton';
+import { ChatPanel } from './components/ChatPanel';
 import './App.css';
 
 // Lazy load route components for code splitting
@@ -30,6 +33,23 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
+// Auth routes where chat should not appear
+const AUTH_ROUTES = ['/login', '/register'];
+
+function ChatWrapper() {
+  const location = useLocation();
+  const isAuthRoute = AUTH_ROUTES.some(route => location.pathname.startsWith(route));
+
+  if (isAuthRoute) return null;
+
+  return (
+    <>
+      <FloatingChatButton />
+      <ChatPanel />
+    </>
+  );
+}
+
 function App() {
   if (!CLERK_PUBLISHABLE_KEY) {
     console.error('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable');
@@ -38,39 +58,42 @@ function App() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
       <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/movies"
-                element={
-                  <ProtectedRoute>
-                    <Movies />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/public-movies"
-                element={
-                  <PublicRoute>
-                    <PublicMovies />
-                  </PublicRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to="/public-movies" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
+        <ChatProvider>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/movies"
+                  element={
+                    <ProtectedRoute>
+                      <Movies />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/public-movies"
+                  element={
+                    <PublicRoute>
+                      <PublicMovies />
+                    </PublicRoute>
+                  }
+                />
+                <Route path="/" element={<Navigate to="/public-movies" replace />} />
+              </Routes>
+            </Suspense>
+            <ChatWrapper />
+          </BrowserRouter>
+        </ChatProvider>
       </AuthProvider>
     </ClerkProvider>
   );
