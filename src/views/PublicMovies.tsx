@@ -1,9 +1,11 @@
 import { useState, Suspense, useDeferredValue } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MoviesGrid } from '../components/MoviesGrid';
 import LoginButton from '../components/LoginButton';
 import type { Movie } from '../types/movie';
 
 export default function PublicMovies() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -13,8 +15,7 @@ export default function PublicMovies() {
   };
 
   const handleMovieClick = (movie: Movie) => {
-    console.log('Movie clicked:', movie.title);
-    // Future: Navigate to movie details
+    navigate(`/movie/${movie.id}`);
   };
 
   return (

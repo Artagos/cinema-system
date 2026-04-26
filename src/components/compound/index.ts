@@ -9,3 +9,4 @@
 
 export { MovieCardCompound } from './MovieCardCompound';
 export { SidebarCompound } from './SidebarCompound';
+export { MovieDetailsCompound } from './MovieDetailsCompound';

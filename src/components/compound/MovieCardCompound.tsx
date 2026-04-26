@@ -22,7 +22,7 @@
  * <MovieCardCompound movie={movie} onClick={handleClick} onMenuClick={handleMenu} />
  */
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Film, Clock, Star, CalendarDays, MoreVertical } from 'lucide-react';
 import type { Movie } from '../../types/movie';
 
@@ -88,11 +88,20 @@ function MovieCardRoot({ movie, children, onClick, onMenuClick }: MovieCardCompo
 
 function MovieCardPoster() {
   const { movie } = useMovieCard();
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   return (
     <div className="movie-poster">
-      {movie.posterUrl ? (
-        <img src={movie.posterUrl} alt={movie.title} />
+      {movie.posterUrl && !imageError ? (
+        <img
+          src={movie.posterUrl}
+          alt={movie.title}
+          onError={handleImageError}
+        />
       ) : (
         <div className="poster-placeholder">
           <Film size={48} />

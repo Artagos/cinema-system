@@ -119,10 +119,6 @@ function MoviesDataGrid({ searchQuery }: { searchQuery: string }) {
   );
 }
 
-// ============================================
-// Example 3: Sidebar with Compound Pattern
-// ============================================
-
 function AppSidebar({ onLogout }: { onLogout: () => void }) {
   return (
     <SidebarCompound>

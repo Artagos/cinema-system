@@ -1,4 +1,5 @@
 import { useState, Suspense, useDeferredValue } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MoviesGrid } from '../components/MoviesGrid';
 import { MoviesToolbar } from '../components/MoviesToolbar';
@@ -20,6 +21,7 @@ import type { Movie } from '../types/movie';
  */
 
 export default function Movies() {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -30,7 +32,7 @@ export default function Movies() {
   };
 
   const handleMovieClick = (movie: Movie) => {
-    console.log('Movie clicked:', movie.title);
+    navigate(`/movie/${movie.id}`);
   };
 
   const handleAddMovie = () => {
