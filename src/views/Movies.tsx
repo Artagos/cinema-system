@@ -36,7 +36,7 @@ export default function Movies() {
   };
 
   const handleAddMovie = () => {
-    console.log('Add movie clicked');
+    navigate('/movies/add');
   };
 
   return (

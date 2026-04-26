@@ -16,6 +16,7 @@ const Dashboard = lazy(() => import('./views/Dashboard'));
 const Movies = lazy(() => import('./views/Movies'));
 const PublicMovies = lazy(() => import('./views/PublicMovies'));
 const MovieDetails = lazy(() => import('./views/MovieDetails'));
+const AddMovie = lazy(() => import('./views/AddMovie'));
 
 // Public route wrapper - redirects authenticated users to dashboard
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -78,6 +79,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Movies />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/movies/add"
+                  element={
+                    <ProtectedRoute>
+                      <AddMovie />
                     </ProtectedRoute>
                   }
                 />
