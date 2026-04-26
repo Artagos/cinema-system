@@ -100,6 +100,31 @@ class MovieApi {
   async toggleMovieStatus(id: string, isActive: boolean): Promise<Movie> {
     return this.updateMovie(id, { isActive });
   }
+
+  /**
+   * Search movies by query (simulates server-side filtering)
+   * Makes a "request" to the API with simulated network delay
+   */
+  async searchMovies(query: string): Promise<Movie[]> {
+    const { sampleMovies } = await import('../../data/sampleMovies');
+
+
+    const delay = 300 + Math.random() * 1000;
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    const search = query.toLowerCase().trim();
+
+    // Empty search returns all movies
+    if (!search) {
+      return sampleMovies;
+    }
+
+    // Server-side filtering logic
+    return sampleMovies.filter(movie =>
+      movie.title.toLowerCase().includes(search) ||
+      movie.genre.some(g => g.toLowerCase().includes(search))
+    );
+  }
 }
 
 // Export singleton instance

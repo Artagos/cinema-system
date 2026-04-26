@@ -1,50 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, Suspense, useDeferredValue } from 'react';
 import { MoviesGrid } from '../components/MoviesGrid';
 import LoginButton from '../components/LoginButton';
-import { movieService } from '../services/movieService';
 import type { Movie } from '../types/movie';
 
 export default function PublicMovies() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadActiveMovies = async () => {
-      try {
-        setLoading(true);
-        const activeMovies = await movieService.getActiveMovies();
-        setMovies(activeMovies);
-      } catch (error) {
-        console.error('Failed to load movies:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
-    loadActiveMovies();
-  }, []);
-
-  const filteredMovies = movies.filter(movie =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    movie.genre.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
 
   const handleMovieClick = (movie: Movie) => {
     console.log('Movie clicked:', movie.title);
     // Future: Navigate to movie details
   };
-
-  if (loading) {
-    return (
-      <div className="public-movies">
-        <div className="public-header">
-          <h1>Now Showing</h1>
-          <p>Loading movies...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="public-movies">
@@ -54,18 +25,28 @@ export default function PublicMovies() {
         <p>Browse our current movie selection</p>
         <input
           type="text"
-          placeholder="Search movies..."
+          placeholder="Search movies by title or genre..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="search-input"
         />
       </header>
 
-      <MoviesGrid
-        movies={filteredMovies}
-        onMovieClick={handleMovieClick}
-        onMovieMenuClick={undefined}
-      />
+      <Suspense fallback={'Loading movies...'}>
+        <MoviesGrid
+          searchQuery={deferredSearchQuery}
+          onMovieClick={handleMovieClick}
+        />
+      </Suspense>
+
+      {/* Concurrent Mode debug indicator */}
+      {searchQuery !== deferredSearchQuery && (
+        <div className="concurrency-debug">
+          <small>
+            🔄 Concurrent Mode Active: Input="{searchQuery}" | Grid filtering="{deferredSearchQuery}"
+          </small>
+        </div>
+      )}
     </div>
   );
 }

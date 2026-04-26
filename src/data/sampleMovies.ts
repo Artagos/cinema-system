@@ -3,7 +3,7 @@ import type { Movie } from '../types/movie';
 // Generate many movies to simulate heavy filtering
 const generateMovies = (count: number): Movie[] => {
   const genres = ['Action', 'Drama', 'Comedy', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Crime', 'Adventure'];
-  const ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17'];
+  const ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17'] as const;
   const baseTitles = ['The', 'A', 'My', 'Dark', 'Last', 'First', 'Great', 'Secret', 'Lost', 'Hidden'];
   const nouns = ['Knight', 'Dream', 'Night', 'Journey', 'Story', 'Empire', 'World', 'Legend', 'Path', 'Future'];
 
@@ -79,4 +79,4 @@ const baseMovies: Movie[] = [
 ];
 
 // Combine base movies with generated ones (adjust count as needed)
-export const sampleMovies: Movie[] = [...baseMovies, ...generateMovies(2000)];
+export const sampleMovies: Movie[] = [...baseMovies, ...generateMovies(1000)];

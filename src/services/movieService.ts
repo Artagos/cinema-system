@@ -57,17 +57,11 @@ class MovieService {
   }
 
   /**
-   * Search movies by title or genre
+   * Search movies by title or genre (delegates to API)
    */
   async searchMovies(query: string): Promise<Movie[]> {
-    const movies = await this.getAllMovies();
-    const lowerQuery = query.toLowerCase();
-
-    return movies.filter(movie =>
-      movie.title.toLowerCase().includes(lowerQuery) ||
-      movie.genre.some(g => g.toLowerCase().includes(lowerQuery)) ||
-      movie.director.toLowerCase().includes(lowerQuery)
-    );
+    // Delegate to API to simulate server-side filtering
+    return movieApi.searchMovies(query);
   }
 
   /**
