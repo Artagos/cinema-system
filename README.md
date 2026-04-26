@@ -30,8 +30,12 @@ npm run dev
 ## Environment Variables
 VITE_CLERK_PUBLISHABLE_KEY=your_key_here
 
-## What I Would Improve Next
-- Real backend
-- Tests
-- CRUD screens
-- CI/CD
+[//]: # (## What I Would Improve Next)
+
+[//]: # (- Real backend)
+
+[//]: # (- Tests)
+
+[//]: # (- CRUD screens)
+
+[//]: # (- CI/CD)
