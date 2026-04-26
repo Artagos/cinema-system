@@ -21,8 +21,9 @@ class MovieApi {
     // if (!response.ok) throw new Error('Failed to fetch movies');
     // return response.json();
     
-    // Static data fallback
+    // Static data fallback with simulated network delay
     const { sampleMovies } = await import('../../data/sampleMovies');
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
     return sampleMovies;
   }
 

@@ -1,6 +1,29 @@
 import type { Movie } from '../types/movie';
 
-export const sampleMovies: Movie[] = [
+// Generate many movies to simulate heavy filtering
+const generateMovies = (count: number): Movie[] => {
+  const genres = ['Action', 'Drama', 'Comedy', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Crime', 'Adventure'];
+  const ratings = ['G', 'PG', 'PG-13', 'R', 'NC-17'];
+  const baseTitles = ['The', 'A', 'My', 'Dark', 'Last', 'First', 'Great', 'Secret', 'Lost', 'Hidden'];
+  const nouns = ['Knight', 'Dream', 'Night', 'Journey', 'Story', 'Empire', 'World', 'Legend', 'Path', 'Future'];
+
+  return Array.from({ length: count }, (_, i) => ({
+    id: String(i + 1),
+    title: `${baseTitles[i % baseTitles.length]} ${nouns[i % nouns.length]} ${i + 1}`,
+    description: 'A movie about various things that happen to various people in various places.',
+    duration: 90 + (i % 60),
+    genre: [genres[i % genres.length], genres[(i + 3) % genres.length]],
+    rating: ratings[i % ratings.length],
+    releaseDate: `20${String(i % 24).padStart(2, '0')}-01-01`,
+    director: `Director ${i}`,
+    cast: ['Actor 1', 'Actor 2', 'Actor 3'],
+    isActive: i % 3 !== 0,
+    posterUrl: 'https://via.placeholder.com/200x300'
+  }));
+};
+
+// Base sample movies
+const baseMovies: Movie[] = [
   {
     id: '1',
     title: 'The Dark Knight',
@@ -54,3 +77,6 @@ export const sampleMovies: Movie[] = [
     posterUrl: 'https://image.tmdb.org/t/p/w200/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'
   }
 ];
+
+// Combine base movies with generated ones (adjust count as needed)
+export const sampleMovies: Movie[] = [...baseMovies, ...generateMovies(2000)];

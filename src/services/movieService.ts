@@ -8,7 +8,7 @@ import type { Movie, MovieFormData } from '../types/movie';
  */
 class MovieService {
   private cache: Map<string, Movie[]> = new Map();
-  private cacheExpiry: number = 5 * 60 * 1000; // 5 minutes
+  private cacheExpiry: number = 0; // 5 minutes
   private lastFetch: number = 0;
 
   /**

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, useDeferredValue } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useFilteredMovies } from '../hooks/useFilteredMovies';
 import { MoviesGrid } from '../components/MoviesGrid';
 import { MoviesToolbar } from '../components/MoviesToolbar';
 import { Sidebar } from '../components/Sidebar';
@@ -13,31 +14,52 @@ export default function Movies() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // React 18 Concurrency: useTransition marks the search filtering as non-urgent
+  // This keeps the search input responsive while the filtering happens in background
+  // const [isSearchPending, startSearchTransition] = useTransition();
+
+  // Defer search query for concurrent rendering visualization
+  // const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  // Use custom hook for filtered movies with heavy computation simulation
+  const filteredMovies = useFilteredMovies(movies, searchQuery, {
+    simulateHeavyComputation: true,
+    computationIterations: 10000,
+    useDeferred:false
+  });
+
   useEffect(() => {
+    let isMounted = true; // Prevents state updates if user leaves page quickly
+
+    const loadMovies = async () => {
+      try {
+        // If you are already loading, don't trigger it again
+        setLoading(true);
+
+        const allMovies = await movieService.getAllMovies();
+
+        if (isMounted) {
+          setMovies(allMovies);
+        }
+      } catch (error) {
+        console.error('Failed to load movies:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
     loadMovies();
+    return () => { isMounted = false; }; // Cleanup function
   }, []);
 
-  const loadMovies = async () => {
-    try {
-      setLoading(true);
-      const allMovies = await movieService.getAllMovies();
-      setMovies(allMovies);
-    } catch (error) {
-      console.error('Failed to load movies:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSearchChange = (value: string) => {
+      setSearchQuery(value);
   };
 
-  const filteredMovies = movies.filter(movie =>
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    movie.genre.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const handleMovieMenuClick = (movie: Movie) => {
-    console.log('Menu clicked for:', movie.title);
-    // Future: Open action menu (edit, delete, etc.)
-  };
+  // const handleMovieMenuClick = (movie: Movie) => {
+  //   console.log('Menu clicked for:', movie.title);
+  //   // Future: Open action menu (edit, delete, etc.)
+  // };
 
   const handleMovieClick = (movie: Movie) => {
     console.log('Movie clicked:', movie.title);
@@ -78,15 +100,34 @@ export default function Movies() {
 
         <MoviesToolbar
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearchChange}
           onAddMovie={handleAddMovie}
         />
 
-        <MoviesGrid
-          movies={filteredMovies}
-          onMovieClick={handleMovieClick}
-          onMovieMenuClick={handleMovieMenuClick}
-        />
+        {/*/!* Visual indicator: Shows when React is working on the deferred update *!/*/}
+        {/*{isSearchPending && (*/}
+        {/*  <div className="search-pending-indicator">*/}
+        {/*    <span className="spinner"></span>*/}
+        {/*    Filtering movies...*/}
+        {/*  </div>*/}
+        {/*)}*/}
+
+        {/* MoviesGrid uses deferred data - it may show stale results briefly during heavy filtering */}
+        <Suspense fallback={'Loading movies...'}>
+          <MoviesGrid
+              movies={filteredMovies}
+              onMovieClick={handleMovieClick}
+          />
+        </Suspense>
+
+        {/* Debug/Dev indicator: Visualize the "lag" between immediate and deferred values */}
+        {/*{searchQuery !== deferredSearchQuery && (*/}
+        {/*  <div className="concurrency-debug">*/}
+        {/*    <small>*/}
+        {/*      🔄 Concurrent Mode Active: Input="{searchQuery}" | Grid filtering="{deferredSearchQuery}"*/}
+        {/*    </small>*/}
+        {/*  </div>*/}
+        {/*)}*/}
       </main>
     </div>
   );
