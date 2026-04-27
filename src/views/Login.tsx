@@ -1,58 +1,48 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Film } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { AuthFormCompound } from '../components/compound/AuthFormCompound';
 
+function getErrorMessage(err: unknown): string {
+  if (!(err instanceof Error)) return 'Login failed. Please try again.';
+
+  const msg = err.message.toLowerCase();
+
+  if (msg.includes('invalid') && (msg.includes('email') || msg.includes('identifier'))) {
+    return 'No account found with this email. Please check your email or create an account.';
+  }
+  if (msg.includes('invalid') || msg.includes('password') || msg.includes('credentials')) {
+    return 'Invalid email or password. Please check your credentials and try again.';
+  }
+  if (msg.includes('rate limit') || msg.includes('too many')) {
+    return 'Too many login attempts. Please wait a moment and try again.';
+  }
+  if (msg.includes('lock') || msg.includes('disabled') || msg.includes('suspended')) {
+    return 'Your account has been temporarily locked. Please contact support.';
+  }
+  if (msg.includes('not ready') || msg.includes('service')) {
+    return 'Authentication service is temporarily unavailable. Please try again in a moment.';
+  }
+
+  return err.message || 'Login failed. Please try again.';
+}
+
+/**
+ * Login View - Refactored with Compound Component Pattern
+ *
+ * Uses AuthFormCompound for declarative form structure:
+ * - ErrorBanner: Displays auth errors
+ * - EmailField: Email input with icon
+ * - PasswordField: Password input with visibility toggle
+ * - SubmitButton: Loading state handling
+ */
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError('');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      await login(formData);
-      navigate('/dashboard');
-    } catch (err) {
-      let errorMessage = 'Login failed. Please try again.';
-
-      if (err instanceof Error) {
-        const clerkError = err.message.toLowerCase();
-
-        if (clerkError.includes('invalid') && (clerkError.includes('email') || clerkError.includes('identifier'))) {
-          errorMessage = 'No account found with this email. Please check your email or create an account.';
-        } else if (clerkError.includes('invalid') || clerkError.includes('password') || clerkError.includes('credentials')) {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (clerkError.includes('rate limit') || clerkError.includes('too many')) {
-          errorMessage = 'Too many login attempts. Please wait a moment and try again.';
-        } else if (clerkError.includes('lock') || clerkError.includes('disabled') || clerkError.includes('suspended')) {
-          errorMessage = 'Your account has been temporarily locked. Please contact support.';
-        } else if (clerkError.includes('not ready') || clerkError.includes('service')) {
-          errorMessage = 'Authentication service is temporarily unavailable. Please try again in a moment.';
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-      }
-
-      setError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = async (email: string, password: string) => {
+    await login({ email, password });
+    navigate('/dashboard');
   };
 
   return (
@@ -64,56 +54,14 @@ export default function Login() {
           <p>Sign in to manage your cinema</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="auth-error">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <div className="input-wrapper">
-              <Mail size={18} className="input-icon" />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="admin@cinema.com"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="input-wrapper">
-              <Lock size={18} className="input-icon" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+        <AuthFormCompound onSubmit={handleSubmit} getErrorMessage={getErrorMessage}>
+          <AuthFormCompound.ErrorBanner />
+          <AuthFormCompound.EmailField placeholder="admin@cinema.com" />
+          <AuthFormCompound.PasswordField placeholder="Enter your password" />
+          <AuthFormCompound.SubmitButton>
+            {(isSubmitting) => (isSubmitting ? 'Signing in...' : 'Sign In')}
+          </AuthFormCompound.SubmitButton>
+        </AuthFormCompound>
 
         <div className="auth-footer">
           <p>

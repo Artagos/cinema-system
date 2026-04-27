@@ -19,6 +19,7 @@ export interface UseFormResult<T extends object> {
   setValue: <K extends keyof T>(field: K, value: T[K]) => void;
   setValues: (values: Partial<T>) => void;
   setError: (field: keyof T, message: string) => void;
+  setTouched: (field: keyof T, value?: boolean) => void;
   clearError: (field: keyof T) => void;
   reset: () => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
@@ -120,6 +121,10 @@ export function useForm<T extends object>(
     });
   }, []);
 
+  const setTouchedField = useCallback((field: keyof T, value: boolean = true) => {
+    setTouched((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
   const reset = useCallback(() => {
     setValuesState(initialValuesRef.current);
     setErrors({});
@@ -214,6 +219,7 @@ export function useForm<T extends object>(
     setValue,
     setValues,
     setError,
+    setTouched: setTouchedField,
     clearError,
     reset,
     handleChange,

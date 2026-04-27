@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Loader2, AlertCircle} from 'lucide-react';
+import { ArrowLeft, Plus, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Sidebar } from '../components/Sidebar';
 import { PageHeader } from '../components/PageHeader';
+import { MovieFormCompound } from '../components/compound/MovieFormCompound';
 import { useForm, type FormErrors } from '../hooks/useForm';
 import { useCreateMovie } from '../hooks/useCreateMovie';
 import type { MovieFormData } from '../types/movie';
 
 const RATINGS = ['G', 'PG', 'PG-13', 'R', 'NC-17'] as const;
+const COMMON_GENRES = ['Action', 'Adventure', 'Comedy', 'Crime', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller'];
 
 const INITIAL_VALUES: MovieFormData = {
   title: '',
@@ -21,58 +23,35 @@ const INITIAL_VALUES: MovieFormData = {
   cast: [],
 };
 
+function validate(values: MovieFormData): FormErrors<MovieFormData> {
+  const errors: FormErrors<MovieFormData> = {};
+
+  if (!values.title.trim()) errors.title = 'Title is required';
+  else if (values.title.length < 2) errors.title = 'Title must be at least 2 characters';
+
+  if (!values.description.trim()) errors.description = 'Description is required';
+  else if (values.description.length < 10) errors.description = 'Description must be at least 10 characters';
+
+  if (!values.director.trim()) errors.director = 'Director is required';
+  if (values.duration <= 0) errors.duration = 'Duration must be greater than 0';
+  if (!values.releaseDate) errors.releaseDate = 'Release date is required';
+  if (values.genre.length === 0) errors.genre = 'At least one genre is required';
+
+  return errors;
+}
+
 /**
- * AddMovie View - Movie Creation Form
+ * AddMovie View - Refactored with Compound Component Pattern
  *
- * Uses composition patterns:
- * - useForm hook: Headless form state management
- * - useCreateMovie hook: Business logic for movie creation
- * - Sidebar: Compound component for navigation
- *
- * Features:
- * - Form validation
- * - Loading states
- * - Error handling
- * - Success navigation
+ * Uses MovieFormCompound for declarative form structure:
+ * - Sections, Rows, Fields compose together
+ * - No repetitive error handling markup
+ * - Validation logic separated
  */
 export default function AddMovie() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { createMovie, loading: submitting, error: submitError } = useCreateMovie();
-
-  const validate = (values: MovieFormData): FormErrors<MovieFormData> => {
-    const errors: FormErrors<MovieFormData> = {};
-
-    if (!values.title.trim()) {
-      errors.title = 'Title is required';
-    } else if (values.title.length < 2) {
-      errors.title = 'Title must be at least 2 characters';
-    }
-
-    if (!values.description.trim()) {
-      errors.description = 'Description is required';
-    } else if (values.description.length < 10) {
-      errors.description = 'Description must be at least 10 characters';
-    }
-
-    if (!values.director.trim()) {
-      errors.director = 'Director is required';
-    }
-
-    if (values.duration <= 0) {
-      errors.duration = 'Duration must be greater than 0';
-    }
-
-    if (!values.releaseDate) {
-      errors.releaseDate = 'Release date is required';
-    }
-
-    if (values.genre.length === 0) {
-      errors.genre = 'At least one genre is required';
-    }
-
-    return errors;
-  };
 
   const form = useForm<MovieFormData>({
     initialValues: INITIAL_VALUES,
@@ -82,57 +61,24 @@ export default function AddMovie() {
     },
   });
 
-  const handleBack = () => {
-    navigate('/movies');
+  const handleBack = () => navigate('/movies');
+
+  const handleGenreChange = (genre: string, checked: boolean) => {
+    const current = form.values.genre;
+    form.setValue('genre', checked ? [...current, genre] : current.filter((g) => g !== genre));
   };
 
-  const handleGenreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const currentGenres = form.values.genre;
-
-    if (e.target.checked) {
-      form.setValue('genre', [...currentGenres, value]);
-    } else {
-      form.setValue(
-        'genre',
-        currentGenres.filter((g) => g !== value)
-      );
-    }
-  };
-
-  const handleCastChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    const cast = value
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+  const handleCastChange = (value: string) => {
+    const cast = value.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
     form.setValue('cast', cast);
   };
-
-  const commonGenres = [
-    'Action',
-    'Adventure',
-    'Comedy',
-    'Crime',
-    'Drama',
-    'Fantasy',
-    'Horror',
-    'Mystery',
-    'Romance',
-    'Sci-Fi',
-    'Thriller',
-  ];
 
   return (
     <div className="dashboard">
       <Sidebar onLogout={logout} />
 
       <main className="main-content">
-        <PageHeader
-          title="Add Movie"
-          subtitle="Create a new movie in your catalog"
-          userEmail={user?.email}
-        />
+        <PageHeader title="Add Movie" subtitle="Create a new movie in your catalog" userEmail={user?.email} />
 
         <div className="add-movie-container">
           <button className="back-button" onClick={handleBack}>
@@ -147,197 +93,82 @@ export default function AddMovie() {
             </div>
           )}
 
-          <form onSubmit={form.handleSubmit} className="movie-form">
-            {/* Basic Info Section */}
-            <section className="form-section">
-              <h3 className="section-title">Basic Information</h3>
+          <MovieFormCompound
+            values={form.values}
+            errors={form.errors}
+            touched={form.touched}
+            setValue={form.setValue}
+            setTouched={form.setTouched}
+          >
+            <form onSubmit={form.handleSubmit} className="movie-form">
+              <MovieFormCompound.Section title="Basic Information">
+                <MovieFormCompound.Row>
+                  <MovieFormCompound.TextInput name="title" label="Title" required placeholder="Enter movie title" />
+                  <MovieFormCompound.TextInput name="director" label="Director" required placeholder="Enter director name" />
+                </MovieFormCompound.Row>
+                <MovieFormCompound.TextArea name="description" label="Description" required placeholder="Enter movie description" />
+              </MovieFormCompound.Section>
 
-              <div className="form-row">
-                <div className="form-field">
-                  <label htmlFor="title">Title *</label>
-                  <input
-                    type="text"
-                    id="title"
-                    {...form.getFieldProps('title')}
-                    placeholder="Enter movie title"
-                    className={form.errors.title && form.touched.title ? 'error' : ''}
-                  />
-                  {form.errors.title && form.touched.title && (
-                    <span className="field-error">{form.errors.title}</span>
-                  )}
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="director">Director *</label>
-                  <input
-                    type="text"
-                    id="director"
-                    {...form.getFieldProps('director')}
-                    placeholder="Enter director name"
-                    className={form.errors.director && form.touched.director ? 'error' : ''}
-                  />
-                  {form.errors.director && form.touched.director && (
-                    <span className="field-error">{form.errors.director}</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="description">Description *</label>
-                <textarea
-                  id="description"
-                  {...form.getFieldProps('description')}
-                  rows={4}
-                  placeholder="Enter movie description"
-                  className={form.errors.description && form.touched.description ? 'error' : ''}
-                />
-                {form.errors.description && form.touched.description && (
-                  <span className="field-error">{form.errors.description}</span>
-                )}
-              </div>
-            </section>
-
-            {/* Technical Details Section */}
-            <section className="form-section">
-              <h3 className="section-title">Technical Details</h3>
-
-              <div className="form-row three-col">
-                <div className="form-field">
-                  <label htmlFor="duration">Duration (minutes) *</label>
-                  <input
-                    type="number"
-                    id="duration"
-                    {...form.getFieldProps('duration')}
-                    min={1}
-                    placeholder="e.g., 120"
-                    className={form.errors.duration && form.touched.duration ? 'error' : ''}
-                  />
-                  {form.errors.duration && form.touched.duration && (
-                    <span className="field-error">{form.errors.duration}</span>
-                  )}
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="rating">Rating *</label>
-                  <select id="rating" {...form.getFieldProps('rating')}>
-                    {RATINGS.map((rating) => (
-                      <option key={rating} value={rating}>
-                        {rating}
-                      </option>
+              <MovieFormCompound.Section title="Technical Details">
+                <MovieFormCompound.Row columns={3}>
+                  <MovieFormCompound.TextInput name="duration" label="Duration (minutes)" required placeholder="e.g., 120" type="number" />
+                  <MovieFormCompound.Select name="rating" label="Rating" required>
+                    {RATINGS.map((r) => (
+                      <option key={r} value={r}>{r}</option>
                     ))}
-                  </select>
-                </div>
+                  </MovieFormCompound.Select>
+                  <MovieFormCompound.TextInput name="releaseDate" label="Release Date" required type="date" />
+                </MovieFormCompound.Row>
+              </MovieFormCompound.Section>
 
-                <div className="form-field">
-                  <label htmlFor="releaseDate">Release Date *</label>
-                  <input
-                    type="date"
-                    id="releaseDate"
-                    {...form.getFieldProps('releaseDate')}
-                    className={form.errors.releaseDate && form.touched.releaseDate ? 'error' : ''}
-                  />
-                  {form.errors.releaseDate && form.touched.releaseDate && (
-                    <span className="field-error">{form.errors.releaseDate}</span>
+              <MovieFormCompound.Section title="Genres">
+                <MovieFormCompound.CheckboxGroup
+                  name="genre"
+                  label="Genres"
+                  required
+                  options={COMMON_GENRES}
+                  selected={form.values.genre}
+                  onChange={handleGenreChange}
+                />
+              </MovieFormCompound.Section>
+
+              <MovieFormCompound.Section title="Cast">
+                <MovieFormCompound.Field name="cast" label="Cast">
+                  {(props) => (
+                    <>
+                      <textarea
+                        {...props}
+                        value={form.values.cast.join('\n')}
+                        onChange={(e) => handleCastChange(e.target.value)}
+                        rows={4}
+                        placeholder="Enter actor names, one per line"
+                      />
+                      <span className="field-hint">Enter one actor name per line</span>
+                    </>
                   )}
-                </div>
-              </div>
-            </section>
+                </MovieFormCompound.Field>
+              </MovieFormCompound.Section>
 
-            {/* Genres Section */}
-            <section className="form-section">
-              <h3 className="section-title">Genres *</h3>
-              <div
-                className={`genre-checkboxes ${
-                  form.errors.genre && form.touched.genre ? 'error' : ''
-                }`}
-              >
-                {commonGenres.map((genre) => (
-                  <label key={genre} className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      value={genre}
-                      checked={form.values.genre.includes(genre)}
-                      onChange={handleGenreChange}
-                    />
-                    <span>{genre}</span>
-                  </label>
-                ))}
-              </div>
-              {form.errors.genre && form.touched.genre && (
-                <span className="field-error">{form.errors.genre}</span>
-              )}
-            </section>
-
-            {/* Cast Section */}
-            <section className="form-section">
-              <h3 className="section-title">Cast</h3>
-              <div className="form-field">
-                <textarea
-                  value={form.values.cast.join('\n')}
-                  onChange={handleCastChange}
-                  rows={4}
-                  placeholder="Enter actor names, one per line"
-                />
-                <span className="field-hint">Enter one actor name per line</span>
-              </div>
-            </section>
-
-            {/* Poster Section */}
-            <section className="form-section">
-              <h3 className="section-title">Poster</h3>
-              <div className="form-field">
-                <label htmlFor="posterUrl">Poster URL</label>
-                <input
-                  type="url"
-                  id="posterUrl"
-                  {...form.getFieldProps('posterUrl')}
-                  placeholder="https://example.com/poster.jpg"
-                />
+              <MovieFormCompound.Section title="Poster">
+                <MovieFormCompound.TextInput name="posterUrl" label="Poster URL" placeholder="https://example.com/poster.jpg" type="url" />
                 <span className="field-hint">Leave empty to use a default placeholder</span>
-              </div>
+                <MovieFormCompound.PosterPreview url={form.values.posterUrl} />
+              </MovieFormCompound.Section>
 
-              {form.values.posterUrl && (
-                <div className="poster-preview">
-                  <img
-                    src={form.values.posterUrl}
-                    alt="Poster preview"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </section>
-
-            {/* Form Actions */}
-            <div className="form-actions">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleBack}
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={!form.isValid || !form.isDirty || submitting}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 size={18} className="spinner" />
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus size={18} />
-                    <span>Add Movie</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+              <MovieFormCompound.Actions submitting={submitting}>
+                <button type="button" className="btn-secondary" onClick={handleBack} disabled={submitting}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={!form.isValid || !form.isDirty || submitting}>
+                  {submitting ? (
+                    <><Loader2 size={18} className="spinner" /><span>Creating...</span></>
+                  ) : (
+                    <><Plus size={18} /><span>Add Movie</span></>
+                  )}
+                </button>
+              </MovieFormCompound.Actions>
+            </form>
+          </MovieFormCompound>
         </div>
       </main>
     </div>

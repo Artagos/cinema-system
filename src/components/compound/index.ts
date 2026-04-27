@@ -10,3 +10,6 @@
 export { MovieCardCompound } from './MovieCardCompound';
 export { SidebarCompound } from './SidebarCompound';
 export { MovieDetailsCompound } from './MovieDetailsCompound';
+export { MovieFormCompound } from './MovieFormCompound';
+export { ChatCompound } from './ChatCompound';
+export { AuthFormCompound } from './AuthFormCompound';
