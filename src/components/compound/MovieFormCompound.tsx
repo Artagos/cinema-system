@@ -247,7 +247,7 @@ function PosterPreview({ url }: { url?: string }) {
 // Actions Component
 function Actions({
   children,
-  submitting = false,
+  // submitting = false,
 }: {
   children: ReactNode;
   submitting?: boolean;

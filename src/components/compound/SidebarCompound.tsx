@@ -150,6 +150,15 @@ function SidebarSection({ title, children }: SectionProps) {
 
 // --- Attach sub-components ---
 
+type SidebarCompoundComponent = typeof SidebarRoot & {
+  Logo: typeof SidebarLogo;
+  Nav: typeof SidebarNav;
+  Link: typeof SidebarLink;
+  Footer: typeof SidebarFooter;
+  Action: typeof SidebarAction;
+  Section: typeof SidebarSection;
+};
+
 Object.assign(SidebarRoot, {
   Logo: SidebarLogo,
   Nav: SidebarNav,
@@ -159,5 +168,5 @@ Object.assign(SidebarRoot, {
   Section: SidebarSection,
 });
 
-export const SidebarCompound = SidebarRoot;
+export const SidebarCompound = SidebarRoot as SidebarCompoundComponent;
 export default SidebarRoot;
